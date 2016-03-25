@@ -8,36 +8,35 @@ struct node{
 	double x,y;
 	};
 struct tree_node {
- 	struct triangle *lchild;
-	struct triangle *mchild;
-	struct triangle *rchild;
-	struct triangle *link_to_triangle;
+ 	struct tree_node *lchild = NULL; //left child
+	struct tree_node *mchild = NULL;
+	struct tree_node *rchild = NULL;
+	struct triangle *link_to_triangle = NULL;
 	};
 struct triangle{
 	int tnum;
 	struct node *n1, *n2, *n3;
+	struct triangle *nb1 = NULL, *nb2 = NULL, *nb3 = NULL;
+	struct tree_node *link_to_tree = NULL;
+	struct triangle *link_to_next_triangle = NULL;
+	//struct triangle *pt;
 	//struct triangle *l;
 	//struct triangle *c;
 	//struct triangle *r;
-	struct triangle *nb1, *nb2, *nb3;
-	struct tree_node *link_to_tree;
-	//struct triangle *pt;
 	};
 struct mesh{
-	struct triangle *T;
+	struct triangle *T = NULL;
 	int num_of_nodes, num_of_tris;
 	};
 
 void print_tree(struct tree_node *root){
 		int i;
-		if(root!=NULL){
-			for(i=0;i<3;i++){
-				printf("N%d.x = %f, N%d.y = %f \n",i,root->nodes[i].x,i, root->nodes[i].y);
-			}
-			printf("\n");
-			print_tree(root->l);
-			print_tree(root->c);
-			print_tree(root->r);
+		if(root != NULL){
+			printf("Node nums are %d , %d, %d\n",root->link_to_triangle->n1.num, root->link_to_triangle->n2.num, 
+				root->link_to_triangle->n3.num);
+			print_tree(root->lchild);
+			print_tree(root->mchild);
+			print_tree(root->rchild);
 		}
 		else{
 			return;
@@ -45,32 +44,41 @@ void print_tree(struct tree_node *root){
 	}
 	
 void insert(struct tree_node *root, struct triangle *tri_list, struct node p){
-		if(point_inside(root,p) && (root->l == NULL && root->c == NULL && root->r == NULL)){
+		if(point_inside(root->link_to_triangle,p) && (root->lchild == NULL && root->mchild == NULL && root->rchild == NULL)){
 			struct triangle *t1,*t2,*t3;
 			t1 = (struct triangle*)malloc(sizeof(struct triangle));
 			t2 = (struct triangle*)malloc(sizeof(struct triangle));
 			t3 = (struct triangle*)malloc(sizeof(struct triangle));
-			t1->nodes[0] = root->nodes[0];
-			t1->nodes[1] = root->nodes[1];
-			t1->nodes[2] = p; t1->l = NULL; t1->c = NULL; t1->r = NULL;
-			t1->pt = root; t1->n1 = t2; t1->n2 = t3;
-			root->l = t1;
-			t2->nodes[0] = root->nodes[1];
-			t2->nodes[1] = root->nodes[2];
-			t2->nodes[2] = p; t2->l = NULL; t2->c = NULL; t2->r = NULL;
-			t2->pt = root; t2->n1 = t3; t2->n2 = t1;
-			root->c = t2;
-			t3->nodes[0] = root->nodes[2];
-			t3->nodes[1] = root->nodes[0];
-			t3->nodes[2] = p; t3->l = NULL; t3->c = NULL; t3->r = NULL;
-			t3->pt = root; t3->n1 = t1; t3->n2 = t2;
-			root->r = t3;
+			t1->n1 = root->link_to_triangle->n1;
+			t1->n2 = root->link_to_triangle->n2;
+			t1->n3 = p; 
+			t1->nb1 = t2; t1->nb2 = t3; t->nb3 = root->link_to_triangle->nb3;
+			
+			root->lchild = t1;
+			t1->link_to_tree = root->lchild;
+			root->link_to_triangle->link_to_next_triangle = t1;
+			
+			t2->n1 = root->n2;
+			t2->n2 = root->n3;
+			t2->n3 = p; 	t2->nb1 = t3; t2->nb2 = t1; t2->nb3 = root->link_to_triangle->nb1;
+			
+			root->mchild = t2;
+			t2->link_to_tree = root->mchild;
+			root->link_to_triangle->link_to_next_triangle = t2;
+			
+			t3->n1 = root->n3;
+			t3->n2 = root->n1;
+			t3->n3 = p; 	t3->nb1 = t1; t3->nb2 = 2; t3->nb3 = root->link_to_triangle->nb2;
+			
+			root->rchild = t3;
+			t3->link_to_tree = root->rchild;
+			root->link_to_triangle->link_to_next_triangle = t3;
 			
 		}
-		else if( point_inside(root,p)){
-			insert(root->l, p);
-			insert(root->c, p);
-			insert(root->r, p);
+		else if( point_inside(root->link_to_triangle,p)){
+			insert(root->lchild, p);
+			insert(root->mchild, p);
+			insert(root->rchild, p);
 		}
 		else{
 			return;
@@ -81,7 +89,7 @@ double dotp(struct node n1, struct node n2){
 }	
 int point_inside(struct triangle *t, struct node n){
 	struct node v0, v1, v2;
-	v0 = t->nodes[0]; v1 = t->nodes[1]; v2 = t->nodes[2];
+	v0 = t->n1; v1 = t->n2; v2 = t->n3;
 	double l1,l2,l3,denom;
 	denom = (v1.y-v2.y)*(v0.x-v2.x)+(v2.x-v1.x)*(v0.y-v2.y);
 	l1 = ((v1.y-v2.y)*(n.x-v2.x)+(v2.x-v1.x)*(n.y-v2.y))/denom;
@@ -98,24 +106,26 @@ int main(){
     int nnodes,i,*node_num, *t_num,dummy;
     double xavg=0, yavg=0;
     struct node *input_nodes; // to keep track of input nodes.
-    struct triangle *T=NULL;  // The big triangle
+    struct triangle *T = NULL;  // The big triangle
     struct node temp; // temporarily store x,y values for a node.
-    struct mesh *m;
+    //struct mesh *m;
+    struct tree_node *root;
     float x,y,xmin=0.0, xmax=0.0, ymin=0.0, ymax=0.0;
     char* fname;
     FILE* fp;
     fp = fopen("4.node","r");
     fscanf(fp, "%d %d %f %f\n",&nnodes,&dummy,&x,&y);
-    input_nodes = (struct node* )malloc(sizeof(struct node)*nnodes);
+    input_nodes = (struct node*)malloc(sizeof(struct node)*(nnodes+3));
     map_t* node_map;
     node_map = map_create();
     *node_num = 3; *t_num = 0;
-    for(i = 0; i<nnodes; i++){
+    for(i = 0; i < nnodes; i++){
     	fscanf(fp,"%d %f %f\n",&dummy, &x, &y);
     	//printf("x = %d, y = %d\n",x,y);
-    	//input_nodes[i].x = (double)x;
-    	//input_nodes[i].y = (double)y;
-    	map_set(&node_map,node_num,x,y);
+    	input_nodes[*node_num].num = *node_num;
+    	input_nodes[*node_num].x = (double)x;
+    	input_nodes[*node_num].y = (double)y;
+    	//map_set(&node_map,node_num,x,y); // setting point cloud into the map
     	node_num++;
     	if(x >= xmax) 
   		xmax = x;
@@ -126,21 +136,40 @@ int main(){
     	else if(y <= ymin) 
  		ymin = y;
  	}
- 	display_map(node_map);
+ 	//display_map(node_map);
  	/*printf("xmax is %d, xmin is %d, ymax is %d, ymin is %d\n",xmax, xmin,ymax, ymin);	
     printf("left is %f , %f\n",(double)xmin-abs(xmax),(double)ymin-abs(ymax));
     printf("right is %f, %f\n",(double)xmax+abs(xmin),(double)ymin-abs(ymax));
     printf("top is %f , %f\n",(double)(xmin+xmax)/2,(double)ymax+abs(ymin));*/
+    input_nodes[0].num = 0;
+    input_nodes[0].x = (double)xmin-abs(xmax);
+    input_nodes[0].y = (double)ymin-abs(ymax);
+    input_nodes[1].num = 1;
+    input_nodes[1].x = (double)xmax+abs(xmin);
+    input_nodes[1].y = (double)ymin-abs(ymax);
+    input_nodes[2].num = 2;
+    input_nodes[2].x = (double)(xmin+xmax)/2;
+    input_nodes[2].y = (double)ymax+abs(ymin);
+    
+    
     // Initializing the big triangle.
+    
     T = (struct triangle*)malloc(sizeof(struct triangle));
-    T->l = NULL; T->c = NULL; T->r = NULL; (*T).tnum = ++t_num;
-    T->nodes[0].x = (double)xmin-abs(xmax); T->nodes[0].y = (double)ymin-abs(ymax);
-    T->nodes[1].x = (double)xmax+abs(xmin); T->nodes[1].y = (double)ymin-abs(ymax);
-    T->nodes[2].x = (double)(xmin+xmax)/2; T->nodes[2].y = (double)ymax+abs(ymin);
-    temp.x = 0.0; temp.y = 10.0;
+    T->n1 = input_nodes[0]; T->n2 = input_nodes[1]; T->n3 = input_nodes[2];
+    root->link_to_triangle = T;
+    T->link_to_tree = root;
+    
+    for(i = 3; i < nnodes; i++){
+    	insert(root,T,input_nodes[i]); // calling insert with root, large triangle T, node
+    	}
+    print_tree(root);
+    
+    
+    
+   // temp.x = 0.0; temp.y = 10.0;
     //insert(T,temp);
     //print_tree(T);
-    temp.x = 0.0; temp.y = 7.0;
+    //temp.x = 0.0; temp.y = 7.0;
     //insert(T,temp);
     //print_tree(T);
     //printf("checking for inside %d\n", point_inside(T,temp)); 
