@@ -65,16 +65,47 @@ void print_tree(struct tree_node *root){
 			return;
 		}
 	}
-	
+// Function to check if p lies inside circumcircle of a,b,c
+int incircle(struct node* na, struct node* nb, struct node *nc, struct node *p){
+ 	double a, b, c, d, e, f, g, h, i, det;
+ 	a = na->x - p->x; 
+ 	b = na->y - p->y;
+ 	//c = pow(na->x,2) - pow(p->x,2) + pow(na->y,2) -pow(p->y,2);
+ 	c = a*a + b*b;
+ 	
+ 	d = nb->x - p->x; 
+ 	e = nb->y - p->y;
+ 	//f = pow(nb->x,2) - pow(p->x,2) + pow(nb->y,2) -pow(p->y,2);
+ 	f = d*d + b*b;
+ 	
+ 	g = nc->x - p->x; 
+ 	h = nc->y - p->y;
+ 	//h = pow(nc->x,2) - pow(p->x,2) + pow(nc->y,2) -pow(p->y,2) ;
+ 	h = g*g + h*h;
+ 	
+ 	det = a*(e*i - h*f) - b*(d*i-g*f) + c*(d*h - e*g);
+ 	if(det > 0)
+ 		return 1;
+ 	else if(det == 0)
+ 		return 0;
+ 	else
+ 		return -1; 	
+ 	}
+ 	
+ void swap_test(struct triangle *t1, struc triangle *t2){
+ 	
+ 	
+ 
+ 	}
 void insert(struct tree_node *root, struct node* p){
 		if(point_inside(root->link_to_triangle,p) && (root->lchild == NULL && root->mchild == NULL && root->rchild == NULL)){
 			struct triangle *t1,*t2,*t3;
-			root->lchild = get_tree_node();
-			root->mchild = get_tree_node();
-			root->rchild = get_tree_node();
-			t1 = get_triangle();
-			t2 = get_triangle();
-			t3 = get_triangle();
+			root->lchild = get_tree_node();  //     constructing  //
+			root->mchild = get_tree_node();  //	 childeren    //
+			root->rchild = get_tree_node();  //	    and	      //
+			t1 = get_triangle();             //	    new       //
+			t2 = get_triangle();		 //	 triangles    //	
+			t3 = get_triangle();		 //		      //
 			
 			t1->n1 = root->link_to_triangle->n1;
 			t1->n2 = root->link_to_triangle->n2;
@@ -83,6 +114,7 @@ void insert(struct tree_node *root, struct node* p){
 			t1->nb1 = t2; t1->nb2 = t3; t1->nb3 = root->link_to_triangle->nb3;
 			root->lchild->link_to_triangle = t1;
 			t1->link_to_tree = root->lchild;
+			
 			
 			
 			t2->n1 = root->link_to_triangle->n2;
@@ -101,6 +133,10 @@ void insert(struct tree_node *root, struct node* p){
 			t3->nb1 = t1; t3->nb2 = t2; t3->nb3 = root->link_to_triangle->nb2;
 			root->rchild->link_to_triangle = t3;
 			t3->link_to_tree = root->rchild;
+			
+			swap_test(t1, t1->nb3);
+			swap_test(t2, t2->nb3);
+			swap_test(t3, t3->nb3);
 			
 			root->link_to_triangle->link_to_next_triangle = t1;
 			t1->link_to_next_triangle = t2;
