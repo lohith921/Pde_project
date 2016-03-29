@@ -37,22 +37,29 @@ struct Face{
             return Edge(V[k],V[(k+1)%3]);
        }
        bool inCircle(Vertex *c1){
-       		double a, b, c, d, e, f, g, h, i, det;
+       		Vertex cent = centroid();
+       		if (orientationTest(V[0],V[1],cent) * orientationTest(V[0],V[1],c1) >0 &&
+       		   (orientationTest(V[1],V[2],cent) * orientationTest(V[1],V[2],c1) >0 &&
+       		   (orientationTest(V[2],V[0],cent) * orientationTest(V[2],V[0],c1) >0 )
+       		   return true;
+       		else
+       		   return false;
+       		/*double a, b, c, d, e, f, g, h, i, det;
 	 	a = V[0]->x - c1->x; 
 	 	b = V[0]->y - c1->y;
  		c = a*a + b*b;
  	
  		d = V[1]->x - c1->x; 
  		e = V[1]->y - c1->y;
- 		f = d*d + b*b;
+ 		f = d*d + e*e;
  		
  		g = V[2]->x - c1->x; 
  		h = V[2]->y - c1->y;
  		h = g*g + h*h;
  		
  		det = a*(e*i - h*f) - b*(d*i-g*f) + c*(d*h - e*g);
- 		std::cout << det << " "<< (det > 0) << std::endl;
- 		return (det >= 0);       
+ 		std::cout << det << " "<< (det > 0) << std::endl;*/
+ 		//return (det > 0);       
        }
        Vertex centroid(){
        		double c1 = (V[0]->x + V[1]->x + V[2]->x)/3.0;
@@ -98,7 +105,7 @@ void delaunayCavity(Face *f,Vertex *v,std::vector<Face*> &cavity,std::vector<Edg
                        f->F[iNeigh]->deleted = true;
                    }
                 }
-                else delaunayCavity(f->F[iNeigh],v,cavity,bnd,otherSide);
+                else delaunayCavity(f->F[iNeigh], v, cavity, bnd, otherSide);
         }
 }
 
@@ -115,10 +122,10 @@ Face* lineSearch(Face *f,Vertex *v){
 		if(f == NULL) return NULL;//we should NEVER return here
 		if(f->inCircle(v)) return f;
 		Vertex c = f->centroid();
-		for(int iNeigh = 0;iNeigh < 3;iNeigh++){
+		for(int iNeigh = 0; iNeigh < 3; iNeigh++){
 			Edge e = f->getEdge(iNeigh);
-			if (orientationTest(&c,v,e.vmin) * orientationTest(&c,v,e.vmax) < 0 &&
-			   orientationTest(e.vmin,e.vmax,&c) * orientationTest(e.vmin,e.vmax,v) < 0){
+			if (((orientationTest(&c,v,e.vmin) * orientationTest(&c,v,e.vmax)) < 0) &&
+			   ((orientationTest(e.vmin,e.vmax,&c) * orientationTest(e.vmin,e.vmax,v)) < 0)){
 				f = f->F[iNeigh];
 				break;
 			}
@@ -133,7 +140,7 @@ void delaunayTrgl(std::vector<Vertex*> &S, std::vector<Face*> &T){
 		std::vector<Edge> bnd;
 		std::vector<Face*> otherSide;
 		delaunayCavity(f,S[iP],cavity,bnd,otherSide);
-		scout << "error" <<sendl;
+		//scout << "error" <<sendl;
 		if (bnd.size() != cavity.size()+2) throw;
 		for(int i = 0;i < cavity.size();i++){
 			//reuse memory slots of invalid elements
@@ -153,6 +160,7 @@ void delaunayTrgl(std::vector<Vertex*> &S, std::vector<Face*> &T){
 			if (otherSide[i]) 
 				cavity.push_back(otherSide[i]);
 		computeAdjacencies(cavity);
+		
 	}
 }
 int main(){
@@ -160,41 +168,41 @@ int main(){
 	Vertex *rl = new Vertex(12,-8);
 	Vertex *lt = new Vertex(-12,12);
 	Vertex *rt = new Vertex(12,12);*/
-	Vertex *v1 = new Vertex(-20,-14);
-	Vertex *v2 = new Vertex(20,-14);
-	Vertex *v3 = new Vertex(0,14);
-	Face *f1 = new Face(v1,v2,v3);
-	/*Face *f1 = new Face(ll,rl,rt);
-	//Face *f2 = new Face(ll,rt,lt);
+	
+	Vertex *ll = new Vertex(-20.0,-14.0);
+	Vertex *rl = new Vertex(20.0,-14.0);
+	Vertex *lt = new Vertex(-20.0,14.0);
+	Vertex *rt = new Vertex(20.0,14.0);
+	
+	Face *f1 = new Face(ll,rl,rt);
+	Face *f2 = new Face(ll,rt,lt);
 	f1->F[2] = f2;
-	f2->F[0] = f1;*/
+	f2->F[0] = f1;
 	std::vector<Face*> T;
 	T.push_back(f1);
-	//T.push_back(f2);
+	T.push_back(f2);
 	//vertices.push_back(ll);
 	//vertices.push_back(rl);
 	//vertices.push_back(lt);
 	//vertices.push_back(rt);
-	//Vertex *v4 = new Vertex(-10,-4);
-	Vertex *v8 = new Vertex(0.0,0.0);
+	Vertex *v4 = new Vertex(-10.0,-4.0);
 	Vertex *v5 = new Vertex(0.0,7.5);
 	Vertex *v6 = new Vertex(0.0,10.0);
-	//Vertex *v7 = new Vertex(10,-4);
-	
-	
+	Vertex *v7 = new Vertex(10.0,-4.0);
+		
 	std::vector<Vertex*> vertices;
-	//vertices.push_back(v4);
-	vertices.push_back(v8);
-	vertices.push_back(v5);
+	vertices.push_back(v4);
 	vertices.push_back(v6);
-	//vertices.push_back(v7);
-	
+	vertices.push_back(v5);
+	vertices.push_back(v7);
+	//vertices.push_back(v8);
+		
 	delaunayTrgl(vertices,T);
 	for (int i=0; i < T.size(); i++){
 		for(int j=0;j<3; j++){
-			scout << "(" << T[i]->V[j]->x << ", " << T[i]->V[j]->y << ") ";
+			scout << "(" << T[i]->V[j]->x << "," << T[i]->V[j]->y << ") ";
 		}
-		scout << "deleted " << T[i]->deleted <<sendl;
+		scout << "deleted " << T[i]->deleted << sendl;
 	}
 	return 0;
 }
@@ -204,3 +212,7 @@ int main(){
        	scout << V[2]->x << V[2]->y << sendl;
        	scout << c1->x << c1->y << sendl;
        */		
+       /*Vertex *v1 = new Vertex(-20,-14);
+	Vertex *v2 = new Vertex(20,-14);
+	Vertex *v3 = new Vertex(2,14);*/
+	//Face *f1 = new Face(v1,v2,v3);
