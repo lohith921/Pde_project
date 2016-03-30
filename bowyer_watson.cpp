@@ -1,6 +1,7 @@
 #include<iostream>
 #include<vector>
 #include<map>
+#include<cmath>
 
 #define scout std::cout
 #define sendl std::endl
@@ -37,29 +38,22 @@ struct Face{
             return Edge(V[k],V[(k+1)%3]);
        }
        bool inCircle(Vertex *c1){
-       		Vertex cent = centroid();
-       		if (orientationTest(V[0],V[1],cent) * orientationTest(V[0],V[1],c1) >0 &&
-       		   (orientationTest(V[1],V[2],cent) * orientationTest(V[1],V[2],c1) >0 &&
-       		   (orientationTest(V[2],V[0],cent) * orientationTest(V[2],V[0],c1) >0 )
-       		   return true;
-       		else
-       		   return false;
-       		/*double a, b, c, d, e, f, g, h, i, det;
-	 	a = V[0]->x - c1->x; 
-	 	b = V[0]->y - c1->y;
- 		c = a*a + b*b;
- 	
- 		d = V[1]->x - c1->x; 
- 		e = V[1]->y - c1->y;
- 		f = d*d + e*e;
+       		// a = V[0], b = V[1], c = V[2]
+       	double D = 2*((V[0]->y*V[2]->x) + (V[1]->y*V[0]->x) - (V[1]->y*V[2]->x) - (V[0]->y*V[1]->x) - (V[2]->y*V[0]->x) + 
+       		      (V[2]->y*V[1]->x));
+       	
+       	double p_0 = ( V[1]->y*pow(V[0]->x,2) - V[2]->y*pow(V[0]->x,2) - pow(V[1]->y,2)*V[0]->y + pow(V[2]->y,2)*V[0]->y + 
+       		       pow(V[1]->x,2)*V[2]->y + pow(V[0]->y,2)*V[1]->y + pow(V[2]->x,2)*V[0]->y - pow(V[2]->y,2)*V[1]->y - 
+       		       pow(V[2]->x,2)*V[1]->y - pow(V[1]->x,2)*V[0]->y + pow(V[1]->y,2)*V[2]->y - pow(V[0]->y,2)*V[2]->y ) / D;
+	
+	double p_1 = ( pow(V[0]->x,2)*V[2]->x + pow(V[0]->y,2)*V[2]->x + pow(V[1]->x,2)*V[0]->x - pow(V[1]->x,2)*V[2]->x + 
+		       pow(V[1]->y,2)*V[0]->x - pow(V[1]->y,2)*V[2]->x - pow(V[0]->x,2)*V[1]->x - pow(V[0]->y,2)*V[1]->x - 
+		       pow(V[2]->x,2)*V[0]->x + pow(V[2]->x,2)*V[1]->x - pow(V[2]->y,2)*V[0]->x + pow(V[2]->y,2)*V[1]->x ) / D;
+		       
+	double cR = sqrt( pow((V[0]->x - p_0),2) + pow((V[0]->y - p_1),2));
+	double 	r = sqrt( pow((c1->x - p_0),2) + pow((c1->y - p_1),2));	
  		
- 		g = V[2]->x - c1->x; 
- 		h = V[2]->y - c1->y;
- 		h = g*g + h*h;
- 		
- 		det = a*(e*i - h*f) - b*(d*i-g*f) + c*(d*h - e*g);
- 		std::cout << det << " "<< (det > 0) << std::endl;*/
- 		//return (det > 0);       
+ 	return (cR > r);       
        }
        Vertex centroid(){
        		double c1 = (V[0]->x + V[1]->x + V[2]->x)/3.0;
@@ -189,12 +183,16 @@ int main(){
 	Vertex *v5 = new Vertex(0.0,7.5);
 	Vertex *v6 = new Vertex(0.0,10.0);
 	Vertex *v7 = new Vertex(10.0,-4.0);
+	Vertex *v8 = new Vertex(0.0,0.0);
 		
 	std::vector<Vertex*> vertices;
 	vertices.push_back(v4);
 	vertices.push_back(v6);
 	vertices.push_back(v5);
+	vertices.push_back(v8);
 	vertices.push_back(v7);
+	//
+	
 	//vertices.push_back(v8);
 		
 	delaunayTrgl(vertices,T);
@@ -202,7 +200,8 @@ int main(){
 		for(int j=0;j<3; j++){
 			scout << "(" << T[i]->V[j]->x << "," << T[i]->V[j]->y << ") ";
 		}
-		scout << "deleted " << T[i]->deleted << sendl;
+		//scout << "deleted " << T[i]->deleted << sendl;
+		scout << sendl;
 	}
 	return 0;
 }
@@ -216,3 +215,31 @@ int main(){
 	Vertex *v2 = new Vertex(20,-14);
 	Vertex *v3 = new Vertex(2,14);*/
 	//Face *f1 = new Face(v1,v2,v3);
+// code removed from incircle test
+//Vertex cent = centroid();
+       		/*if ( orientationTest(V[0],V[1],cent) * orientationTest(V[0],V[1],c1)) >0 &&
+       		   ( orientationTest(V[1],V[2],cent) * orientationTest(V[1],V[2],c1)) >0 )
+       		   //(orientationTest(V[2],V[0],cent) * orientationTest(V[2],V[0],c1) >0 )
+       		   return true;
+       		else
+       		   return false;*/
+       		 /*  scout << "Determinant called for (";
+       		   for(int i=0;i<3; i++){
+       		   	scout << V[i]->x << "," << V[i]->y << ") ("; 
+       		   }
+       		   scout << c1->x << "," << c1->y << ")" << sendl;
+       		double a, b, c, d, e, f, g, h, i, det;
+	 	a = V[0]->x - c1->x; 
+	 	b = V[0]->y - c1->y;
+ 		c = a*a + b*b;
+ 	
+ 		d = V[1]->x - c1->x; 
+ 		e = V[1]->y - c1->y;
+ 		f = d*d + e*e;
+ 		
+ 		g = V[2]->x - c1->x; 
+ 		h = V[2]->y - c1->y;
+ 		h = g*g + h*h;
+ 		
+ 		det = a*(e*i - h*f) - b*(d*i-g*f) + c*(d*h - e*g);
+ 		std::cout << det << " "<< (det > 0) << std::endl;*/
